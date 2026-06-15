@@ -1,0 +1,20 @@
+{
+  "name": "@pyme/database",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "echo \"Fase 0: seed pendiente hasta Fase 1\"",
+    "lint": "echo \"Fase 0: lint pendiente hasta schema Prisma\"",
+    "test": "echo \"Fase 0: tests pendientes hasta schema Prisma\"",
+    "typecheck": "echo \"Fase 0: typecheck pendiente hasta schema Prisma\""
+  },
+  "devDependencies": {
+    "prisma": "^5.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.0.0"
+  }
+}

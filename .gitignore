@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+.next/
+coverage/
+
+# Environment
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS and editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Local uploads
+uploads/*
+!uploads/.gitkeep
+!uploads/applications/
+uploads/applications/*
+!uploads/applications/.gitkeep
+
+# Database/runtime
+postgres_data/
+pgadmin_data/

@@ -1,0 +1,82 @@
+name: pyme-financing-platform
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pyme-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-pyme_financing}
+      POSTGRES_USER: ${POSTGRES_USER:-pyme}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pyme_local_password}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pyme} -d ${POSTGRES_DB:-pyme_financing}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4:8
+    container_name: pyme-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@example.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin_local_password}
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    image: node:22-alpine
+    container_name: pyme-api
+    working_dir: /workspace
+    command: >
+      sh -c "corepack enable &&
+      echo 'Fase 0: apps/api esta preparado para NestJS en el puerto 3001.' &&
+      tail -f /dev/null"
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: ${API_PORT:-3001}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-pyme}:${POSTGRES_PASSWORD:-pyme_local_password}@postgres:5432/${POSTGRES_DB:-pyme_financing}?schema=public
+      UPLOADS_DIR: ${UPLOADS_DIR:-uploads}
+      JWT_SECRET: ${JWT_SECRET:-change_me_for_local_development}
+    ports:
+      - "${API_PORT:-3001}:3001"
+    volumes:
+      - ./:/workspace
+      - uploads_data:/workspace/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    image: node:22-alpine
+    container_name: pyme-web
+    working_dir: /workspace
+    command: >
+      sh -c "corepack enable &&
+      echo 'Fase 0: apps/web esta preparado para Next.js en el puerto 3000.' &&
+      tail -f /dev/null"
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: ${WEB_PORT:-3000}
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:3001/api}
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    volumes:
+      - ./:/workspace
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+  uploads_data:

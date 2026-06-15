@@ -1,0 +1,23 @@
+{
+  "name": "@pyme/web",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "lint": "echo \"Fase 0: lint pendiente hasta scaffold Next.js\"",
+    "test": "echo \"Fase 0: tests pendientes hasta scaffold Next.js\"",
+    "typecheck": "echo \"Fase 0: typecheck pendiente hasta scaffold Next.js\""
+  },
+  "dependencies": {
+    "next": "^14.0.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "typescript": "^5.0.0"
+  }
+}

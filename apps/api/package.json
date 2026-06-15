@@ -1,0 +1,26 @@
+{
+  "name": "@pyme/api",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start:dev": "nest start --watch",
+    "build": "nest build",
+    "lint": "echo \"Fase 0: lint pendiente hasta scaffold NestJS\"",
+    "test": "echo \"Fase 0: tests pendientes hasta scaffold NestJS\"",
+    "typecheck": "echo \"Fase 0: typecheck pendiente hasta scaffold NestJS\""
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.0.0",
+    "@nestjs/core": "^10.0.0",
+    "@nestjs/platform-express": "^10.0.0",
+    "reflect-metadata": "^0.2.0",
+    "rxjs": "^7.8.0"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^10.0.0",
+    "@nestjs/schematics": "^10.0.0",
+    "@nestjs/testing": "^10.0.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}

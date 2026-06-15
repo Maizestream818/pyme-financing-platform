@@ -1,0 +1,21 @@
+{
+  "name": "pyme-financing-platform",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "dev:web": "pnpm --filter @pyme/web dev",
+    "dev:api": "pnpm --filter @pyme/api start:dev",
+    "db:generate": "pnpm --filter @pyme/database db:generate",
+    "db:migrate": "pnpm --filter @pyme/database db:migrate",
+    "db:seed": "pnpm --filter @pyme/database db:seed",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}
