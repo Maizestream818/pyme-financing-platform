@@ -1,5 +1,6 @@
 import { Module, ValidationError, ValidationPipe } from '@nestjs/common';
 import { APP_FILTER, APP_PIPE } from '@nestjs/core';
+import { ApplicationDecisionsModule } from './modules/application-decisions/application-decisions.module';
 import { ApplicationMatchesModule } from './modules/application-matches/application-matches.module';
 import { ApplicationDocumentsModule } from './modules/application-documents/application-documents.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -55,6 +56,7 @@ function flattenValidationErrors(errors: ValidationError[]) {
     ProductRulesModule,
     RiskAssessmentsModule,
     ApplicationMatchesModule,
+    ApplicationDecisionsModule,
   ],
   providers: [
     {
