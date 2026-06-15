@@ -4,7 +4,9 @@ import { ApplicationDocumentsModule } from './modules/application-documents/appl
 import { AuthModule } from './modules/auth/auth.module';
 import { CompaniesModule } from './modules/companies/companies.module';
 import { DocumentRequirementsModule } from './modules/document-requirements/document-requirements.module';
+import { FinancialProductsModule } from './modules/financial-products/financial-products.module';
 import { FinancingApplicationsModule } from './modules/financing-applications/financing-applications.module';
+import { ProductRulesModule } from './modules/product-rules/product-rules.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { StatusHistoryModule } from './modules/status-history/status-history.module';
 import { UsersModule } from './modules/users/users.module';
@@ -47,6 +49,8 @@ function flattenValidationErrors(errors: ValidationError[]) {
     StatusHistoryModule,
     DocumentRequirementsModule,
     ApplicationDocumentsModule,
+    FinancialProductsModule,
+    ProductRulesModule,
   ],
   providers: [
     {
