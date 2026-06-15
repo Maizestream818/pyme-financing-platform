@@ -7,7 +7,7 @@
     "build": "next build",
     "lint": "echo \"Fase 0: lint pendiente hasta scaffold Next.js\"",
     "test": "echo \"Fase 0: tests pendientes hasta scaffold Next.js\"",
-    "typecheck": "echo \"Fase 0: typecheck pendiente hasta scaffold Next.js\""
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "next": "^14.0.0",
