@@ -81,6 +81,21 @@ docker compose up
 
 No ejecutar migraciones en Fase 0. No instalar dependencias sin autorizacion.
 
+## Base de Datos y Prisma
+
+La configuracion de Prisma vive en `packages/database`.
+
+Comandos previstos para Fase 1 y posteriores:
+
+```bash
+pnpm --filter @pyme/database prisma:validate
+pnpm --filter @pyme/database db:generate
+pnpm --filter @pyme/database db:migrate
+pnpm --filter @pyme/database db:seed
+```
+
+La migracion inicial debe crear enums, tablas, relaciones, indices, checks y el indice parcial `unique_published_decision_per_application`. Los seeders iniciales deben cargar roles, usuarios demo, requisitos documentales, productos financieros y reglas iniciales.
+
 ## Roles
 
 - `internal_operator`: debe operar todos los casos, revisar documentos, ejecutar riesgo, generar matching, ver porcentajes, razones, auditoria, expediente completo y publicar decisiones finales.
@@ -106,7 +121,7 @@ El MVP no debe incluir IA generativa, chatbot, buro real, firma electronica, pag
 
 ## Estado Actual
 
-Fase 0 completada: repositorio e infraestructura base. El proyecto queda listo para iniciar Fase 1: Base de Datos y Prisma.
+Fase 1 completada a nivel de archivos: schema Prisma, migracion inicial y seeders creados. La ejecucion de `prisma validate`, migracion y seed queda pendiente de instalar dependencias autorizadas y levantar PostgreSQL.
 
 ## Decisiones Operativas Cerradas
 

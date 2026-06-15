@@ -47,7 +47,7 @@ La base de datos debe incluir:
 - `risk_level`: `low`, `medium`, `high`.
 - `credit_history_status`: `unknown`, `good`, `regular`, `bad`, `not_available`.
 - `rule_operator`: `equals`, `not_equals`, `gte`, `lte`, `between`, `contains`.
-- `rule_field`: `requested_amount`, `desired_term_months`, `urgency_level`, `need_type`, `years_operating`, `monthly_revenue`, `monthly_expenses`, `employee_count`, `document_completion_percentage`, `risk_level`, `has_invoices`, `has_existing_debt`, `has_collateral`, `has_guarantor`, `debt_service_coverage_ratio`.
+- `rule_field`: `requested_amount`, `desired_term_months`, `urgency_level`, `need_type`, `years_operating`, `monthly_revenue`, `monthly_expenses`, `employee_count`, `document_completion_percentage`, `risk_level`, `credit_history_status`, `has_invoices`, `has_existing_debt`, `has_collateral`, `has_guarantor`, `debt_service_coverage_ratio`.
 - `decision_status`: `under_review`, `prequalified`, `not_prequalified`, `needs_more_information`.
 - `audit_action`: `create`, `update`, `deactivate`, `status_change`, `upload_document`, `review_document`, `calculate_risk`, `generate_matches`, `login`, `publish_decision`, `validate_need_type`, `register_applicant`, `replace_document`.
 

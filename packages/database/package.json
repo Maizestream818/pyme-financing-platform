@@ -3,15 +3,20 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev",
-    "db:seed": "echo \"Fase 0: seed pendiente hasta Fase 1\"",
-    "lint": "echo \"Fase 0: lint pendiente hasta schema Prisma\"",
-    "test": "echo \"Fase 0: tests pendientes hasta schema Prisma\"",
-    "typecheck": "echo \"Fase 0: typecheck pendiente hasta schema Prisma\""
+    "prisma:validate": "prisma validate --schema prisma/schema.prisma",
+    "db:generate": "prisma generate --schema prisma/schema.prisma",
+    "db:migrate": "prisma migrate dev --schema prisma/schema.prisma",
+    "db:seed": "prisma db seed --schema prisma/schema.prisma",
+    "lint": "pnpm prisma:validate",
+    "test": "echo \"Fase 1: pruebas automatizadas de base de datos pendientes hasta integrar entorno de test\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "devDependencies": {
     "prisma": "^5.0.0",
+    "tsx": "^4.0.0",
     "typescript": "^5.0.0"
   },
   "dependencies": {

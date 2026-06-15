@@ -1,0 +1,454 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum BusinessType {
+  pfae
+  persona_moral
+
+  @@map("business_type")
+}
+
+enum UrgencyLevel {
+  low
+  medium
+  high
+
+  @@map("urgency_level")
+}
+
+enum NeedType {
+  working_capital
+  equipment
+  invoices
+  expansion
+  other
+
+  @@map("need_type")
+}
+
+enum ApplicationStatus {
+  draft
+  documents_pending
+  ready_for_analysis
+  analyzed
+  matched
+  decision_published
+  closed
+
+  @@map("application_status")
+}
+
+enum DocumentStatus {
+  pending
+  uploaded
+  approved
+  rejected
+  not_applicable
+
+  @@map("document_status")
+}
+
+enum RiskLevel {
+  low
+  medium
+  high
+
+  @@map("risk_level")
+}
+
+enum CreditHistoryStatus {
+  unknown
+  good
+  regular
+  bad
+  not_available
+
+  @@map("credit_history_status")
+}
+
+enum RuleOperator {
+  equals
+  not_equals
+  gte
+  lte
+  between
+  contains
+
+  @@map("rule_operator")
+}
+
+enum RuleField {
+  requested_amount
+  desired_term_months
+  urgency_level
+  need_type
+  years_operating
+  monthly_revenue
+  monthly_expenses
+  employee_count
+  document_completion_percentage
+  risk_level
+  credit_history_status
+  has_invoices
+  has_existing_debt
+  has_collateral
+  has_guarantor
+  debt_service_coverage_ratio
+
+  @@map("rule_field")
+}
+
+enum DecisionStatus {
+  under_review
+  prequalified
+  not_prequalified
+  needs_more_information
+
+  @@map("decision_status")
+}
+
+enum AuditAction {
+  create
+  update
+  deactivate
+  status_change
+  upload_document
+  review_document
+  calculate_risk
+  generate_matches
+  login
+  publish_decision
+  validate_need_type
+  register_applicant
+  replace_document
+
+  @@map("audit_action")
+}
+
+model Role {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   @unique @db.VarChar(50)
+  description String?  @db.Text
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  users User[]
+
+  @@map("roles")
+}
+
+model User {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  roleId       String    @map("role_id") @db.Uuid
+  fullName     String    @map("full_name") @db.VarChar(150)
+  email        String    @unique @db.VarChar(150)
+  passwordHash String    @map("password_hash") @db.VarChar(255)
+  isActive     Boolean   @default(true) @map("is_active")
+  lastLoginAt  DateTime? @map("last_login_at") @db.Timestamp(6)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  role                       Role                       @relation(fields: [roleId], references: [id])
+  companiesAsApplicant       Company[]                  @relation("CompanyApplicant")
+  companiesCreated           Company[]                  @relation("CompanyCreatedBy")
+  applicationsCreated        FinancingApplication[]     @relation("ApplicationCreatedBy")
+  needTypeValidations        FinancingApplication[]     @relation("NeedTypeValidatedBy")
+  documentsUploaded          ApplicationDocument[]      @relation("DocumentUploadedBy")
+  documentsReviewed          ApplicationDocument[]      @relation("DocumentReviewedBy")
+  riskAssessmentsCalculated  RiskAssessment[]           @relation("RiskCalculatedBy")
+  statusChanges              ApplicationStatusHistory[] @relation("StatusChangedBy")
+  auditLogs                  AuditLog[]
+  applicationDecisions       ApplicationDecision[]      @relation("DecisionDecidedBy")
+
+  @@index([roleId], map: "idx_users_role_id")
+  @@map("users")
+}
+
+model Company {
+  id              String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  legalName       String       @map("legal_name") @db.VarChar(200)
+  tradeName       String?      @map("trade_name") @db.VarChar(200)
+  rfc             String       @unique @db.VarChar(13)
+  businessType    BusinessType @map("business_type")
+  sector          String       @db.VarChar(100)
+  yearsOperating  Decimal      @map("years_operating") @db.Decimal(5, 2)
+  monthlyRevenue  Decimal      @map("monthly_revenue") @db.Decimal(14, 2)
+  monthlyExpenses Decimal      @map("monthly_expenses") @db.Decimal(14, 2)
+  employeeCount   Int?         @map("employee_count")
+  contactEmail    String?      @map("contact_email") @db.VarChar(150)
+  contactPhone    String?      @map("contact_phone") @db.VarChar(20)
+  applicantUserId String?      @map("applicant_user_id") @db.Uuid
+  createdByUserId String?      @map("created_by_user_id") @db.Uuid
+  createdAt       DateTime     @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt       DateTime     @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  applicantUser User?                  @relation("CompanyApplicant", fields: [applicantUserId], references: [id])
+  createdBy     User?                  @relation("CompanyCreatedBy", fields: [createdByUserId], references: [id])
+  applications  FinancingApplication[]
+
+  @@index([businessType], map: "idx_companies_business_type")
+  @@index([applicantUserId], map: "idx_companies_applicant_user_id")
+  @@map("companies")
+}
+
+model FinancingApplication {
+  id                         String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId                  String               @map("company_id") @db.Uuid
+  requestedAmount            Decimal              @map("requested_amount") @db.Decimal(14, 2)
+  desiredTermMonths          Int                  @map("desired_term_months")
+  fundingPurpose             String               @map("funding_purpose") @db.Text
+  urgencyLevel               UrgencyLevel         @map("urgency_level")
+  needType                   NeedType             @map("need_type")
+  validatedNeedType          NeedType?            @map("validated_need_type")
+  needTypeValidatedByUserId  String?              @map("need_type_validated_by_user_id") @db.Uuid
+  needTypeValidatedAt        DateTime?            @map("need_type_validated_at") @db.Timestamp(6)
+  needTypeValidationNotes    String?              @map("need_type_validation_notes") @db.Text
+  hasInvoices                Boolean?             @map("has_invoices")
+  hasExistingDebt            Boolean?             @map("has_existing_debt")
+  existingDebtAmount         Decimal?             @map("existing_debt_amount") @db.Decimal(14, 2)
+  monthlyDebtPayment         Decimal?             @map("monthly_debt_payment") @db.Decimal(14, 2)
+  creditCheckAuthorized      Boolean?             @map("credit_check_authorized")
+  creditHistoryStatus        CreditHistoryStatus? @map("credit_history_status")
+  hasCollateral              Boolean?             @map("has_collateral")
+  collateralType             String?              @map("collateral_type") @db.VarChar(100)
+  collateralEstimatedValue   Decimal?             @map("collateral_estimated_value") @db.Decimal(14, 2)
+  hasGuarantor               Boolean?             @map("has_guarantor")
+  status                     ApplicationStatus    @default(draft)
+  createdByUserId            String?              @map("created_by_user_id") @db.Uuid
+  createdAt                  DateTime             @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt                  DateTime             @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  company                 Company                    @relation(fields: [companyId], references: [id])
+  createdBy               User?                      @relation("ApplicationCreatedBy", fields: [createdByUserId], references: [id])
+  needTypeValidatedBy     User?                      @relation("NeedTypeValidatedBy", fields: [needTypeValidatedByUserId], references: [id])
+  documents               ApplicationDocument[]
+  riskAssessments         RiskAssessment[]
+  applicationDecisions    ApplicationDecision[]
+  applicationStatusHistory ApplicationStatusHistory[]
+
+  @@index([companyId], map: "idx_financing_applications_company_id")
+  @@index([status], map: "idx_financing_applications_status")
+  @@index([createdByUserId], map: "idx_financing_applications_created_by_user_id")
+  @@index([needTypeValidatedByUserId], map: "idx_financing_applications_need_type_validated_by")
+  @@map("financing_applications")
+}
+
+model DocumentRequirement {
+  id                    String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                  String        @unique @db.VarChar(150)
+  description           String?       @db.Text
+  isRequired            Boolean       @default(true) @map("is_required")
+  appliesTo             NeedType?     @map("applies_to")
+  appliesToBusinessType BusinessType? @map("applies_to_business_type")
+  isActive              Boolean       @default(true) @map("is_active")
+  createdAt             DateTime      @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt             DateTime      @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  applicationDocuments ApplicationDocument[]
+
+  @@index([appliesTo], map: "idx_document_requirements_applies_to")
+  @@index([appliesToBusinessType], map: "idx_document_requirements_business_type")
+  @@map("document_requirements")
+}
+
+model ApplicationDocument {
+  id                    String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  applicationId         String         @map("application_id") @db.Uuid
+  documentRequirementId String         @map("document_requirement_id") @db.Uuid
+  status                DocumentStatus @default(pending)
+  filePath              String?        @map("file_path") @db.VarChar(500)
+  storedFilename        String?        @map("stored_filename") @db.VarChar(255)
+  originalFilename      String?        @map("original_filename") @db.VarChar(255)
+  mimeType              String?        @map("mime_type") @db.VarChar(100)
+  fileSizeBytes         BigInt?        @map("file_size_bytes")
+  fileHashSha256        String?        @map("file_hash_sha256") @db.VarChar(64)
+  notes                 String?        @db.Text
+  uploadedByUserId      String?        @map("uploaded_by_user_id") @db.Uuid
+  reviewedByUserId      String?        @map("reviewed_by_user_id") @db.Uuid
+  uploadedAt            DateTime?      @map("uploaded_at") @db.Timestamp(6)
+  reviewedAt            DateTime?      @map("reviewed_at") @db.Timestamp(6)
+  createdAt             DateTime       @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt             DateTime       @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  application         FinancingApplication @relation(fields: [applicationId], references: [id])
+  documentRequirement DocumentRequirement  @relation(fields: [documentRequirementId], references: [id])
+  uploadedBy          User?                @relation("DocumentUploadedBy", fields: [uploadedByUserId], references: [id])
+  reviewedBy          User?                @relation("DocumentReviewedBy", fields: [reviewedByUserId], references: [id])
+
+  @@unique([applicationId, documentRequirementId], map: "uq_application_documents_application_requirement")
+  @@index([applicationId], map: "idx_application_documents_application_id")
+  @@index([documentRequirementId], map: "idx_application_documents_document_requirement_id")
+  @@index([uploadedByUserId], map: "idx_application_documents_uploaded_by_user_id")
+  @@index([reviewedByUserId], map: "idx_application_documents_reviewed_by_user_id")
+  @@map("application_documents")
+}
+
+model FinancialProduct {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                String   @unique @db.VarChar(150)
+  description         String?  @db.Text
+  minAmount           Decimal  @map("min_amount") @db.Decimal(14, 2)
+  maxAmount           Decimal  @map("max_amount") @db.Decimal(14, 2)
+  minYearsOperating   Decimal  @map("min_years_operating") @db.Decimal(5, 2)
+  maxResponseDays     Int?     @map("max_response_days")
+  estimatedAnnualRate Decimal? @map("estimated_annual_rate") @db.Decimal(5, 2)
+  requiresInvoices    Boolean  @default(false) @map("requires_invoices")
+  requiresBankStatements Boolean @default(true) @map("requires_bank_statements")
+  requiresCollateral  Boolean  @default(false) @map("requires_collateral")
+  idealFor            NeedType? @map("ideal_for")
+  isActive            Boolean  @default(true) @map("is_active")
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  productRules       ProductRule[]
+  applicationMatches ApplicationMatch[]
+
+  @@index([idealFor], map: "idx_financial_products_ideal_for")
+  @@map("financial_products")
+}
+
+model ProductRule {
+  id                 String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  financialProductId String       @map("financial_product_id") @db.Uuid
+  ruleField          RuleField    @map("rule_field")
+  operator           RuleOperator
+  conditionValue     String       @map("condition_value") @db.VarChar(100)
+  conditionValueTo   String?      @map("condition_value_to") @db.VarChar(100)
+  scoreWeight        Int          @map("score_weight")
+  isActive           Boolean      @default(true) @map("is_active")
+  createdAt          DateTime     @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt          DateTime     @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  financialProduct FinancialProduct @relation(fields: [financialProductId], references: [id])
+
+  @@index([financialProductId], map: "idx_product_rules_financial_product_id")
+  @@map("product_rules")
+}
+
+model RiskAssessment {
+  id                            String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  applicationId                 String     @map("application_id") @db.Uuid
+  estimatedCashflow             Decimal    @map("estimated_cashflow") @db.Decimal(14, 2)
+  operatingMargin               Decimal    @map("operating_margin") @db.Decimal(7, 4)
+  requestedAmountToRevenueRatio Decimal    @map("requested_amount_to_revenue_ratio") @db.Decimal(7, 4)
+  estimatedMonthlyPayment       Decimal    @map("estimated_monthly_payment") @db.Decimal(14, 2)
+  totalMonthlyDebtPayment       Decimal    @map("total_monthly_debt_payment") @db.Decimal(14, 2)
+  debtServiceCoverageRatio      Decimal    @map("debt_service_coverage_ratio") @db.Decimal(7, 4)
+  paymentCapacity               Decimal    @map("payment_capacity") @db.Decimal(14, 2)
+  documentCompletionPercentage  Decimal    @map("document_completion_percentage") @db.Decimal(5, 2)
+  riskScore                     Decimal    @map("risk_score") @db.Decimal(5, 2)
+  riskLevel                     RiskLevel  @map("risk_level")
+  riskReasons                   Json?      @map("risk_reasons")
+  inputSnapshot                 Json       @map("input_snapshot")
+  ruleSetVersion                String?    @map("rule_set_version") @db.VarChar(50)
+  calculatedByUserId            String?    @map("calculated_by_user_id") @db.Uuid
+  calculatedAt                  DateTime   @default(now()) @map("calculated_at") @db.Timestamp(6)
+  createdAt                     DateTime   @default(now()) @map("created_at") @db.Timestamp(6)
+
+  application      FinancingApplication @relation(fields: [applicationId], references: [id])
+  calculatedBy     User?                @relation("RiskCalculatedBy", fields: [calculatedByUserId], references: [id])
+  applicationMatches ApplicationMatch[]
+  applicationDecisions ApplicationDecision[]
+
+  @@index([applicationId, calculatedAt], map: "idx_risk_assessments_application_calculated_at")
+  @@index([calculatedByUserId], map: "idx_risk_assessments_calculated_by_user_id")
+  @@map("risk_assessments")
+}
+
+model ApplicationMatch {
+  id                       String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  riskAssessmentId         String   @map("risk_assessment_id") @db.Uuid
+  financialProductId       String   @map("financial_product_id") @db.Uuid
+  compatibilityScore       Decimal  @map("compatibility_score") @db.Decimal(5, 2)
+  reason                   String   @db.Text
+  calculatedAt             DateTime @default(now()) @map("calculated_at") @db.Timestamp(6)
+  createdAt                DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  estimatedAnnualRateUsed  Decimal? @map("estimated_annual_rate_used") @db.Decimal(5, 2)
+  estimatedMonthlyPayment  Decimal? @map("estimated_monthly_payment") @db.Decimal(14, 2)
+  debtServiceCoverageRatio Decimal? @map("debt_service_coverage_ratio") @db.Decimal(7, 4)
+
+  riskAssessment   RiskAssessment   @relation(fields: [riskAssessmentId], references: [id])
+  financialProduct FinancialProduct @relation(fields: [financialProductId], references: [id])
+  applicationDecisions ApplicationDecision[]
+
+  @@unique([riskAssessmentId, financialProductId], map: "uq_application_matches_assessment_product")
+  @@unique([id, riskAssessmentId], map: "uq_application_matches_id_risk_assessment")
+  @@index([riskAssessmentId], map: "idx_application_matches_risk_assessment_id")
+  @@index([financialProductId], map: "idx_application_matches_financial_product_id")
+  @@map("application_matches")
+}
+
+model ApplicationDecision {
+  id                       String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  applicationId            String         @map("application_id") @db.Uuid
+  riskAssessmentId         String         @map("risk_assessment_id") @db.Uuid
+  selectedMatchId          String?        @map("selected_match_id") @db.Uuid
+  decisionStatus           DecisionStatus @map("decision_status")
+  approvedAmount           Decimal?       @map("approved_amount") @db.Decimal(14, 2)
+  approvedTermMonths       Int?           @map("approved_term_months")
+  estimatedMonthlyPayment  Decimal?       @map("estimated_monthly_payment") @db.Decimal(14, 2)
+  publicMessage            String         @map("public_message") @db.Text
+  internalNotes            String?        @map("internal_notes") @db.Text
+  isPublishedToApplicant   Boolean        @default(false) @map("is_published_to_applicant")
+  decidedByUserId          String         @map("decided_by_user_id") @db.Uuid
+  decidedAt                DateTime       @default(now()) @map("decided_at") @db.Timestamp(6)
+  publishedAt              DateTime?      @map("published_at") @db.Timestamp(6)
+  createdAt                DateTime       @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt                DateTime       @updatedAt @map("updated_at") @db.Timestamp(6)
+
+  application    FinancingApplication @relation(fields: [applicationId], references: [id])
+  riskAssessment RiskAssessment       @relation(fields: [riskAssessmentId], references: [id])
+  selectedMatch  ApplicationMatch?    @relation(fields: [selectedMatchId, riskAssessmentId], references: [id, riskAssessmentId], onDelete: NoAction, onUpdate: Cascade, map: "fk_application_decisions_selected_match_risk_assessment")
+  decidedBy      User                 @relation("DecisionDecidedBy", fields: [decidedByUserId], references: [id])
+
+  @@index([applicationId], map: "idx_application_decisions_application")
+  @@index([applicationId, isPublishedToApplicant], map: "idx_application_decisions_published")
+  @@index([riskAssessmentId], map: "idx_application_decisions_risk_assessment_id")
+  @@index([selectedMatchId], map: "idx_application_decisions_selected_match_id")
+  @@index([decidedByUserId], map: "idx_application_decisions_decided_by_user_id")
+  @@map("application_decisions")
+}
+
+model ApplicationStatusHistory {
+  id              String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  applicationId   String             @map("application_id") @db.Uuid
+  previousStatus  ApplicationStatus? @map("previous_status")
+  newStatus       ApplicationStatus  @map("new_status")
+  comment         String?            @db.Text
+  changedByUserId String?            @map("changed_by_user_id") @db.Uuid
+  changedAt       DateTime           @default(now()) @map("changed_at") @db.Timestamp(6)
+  createdAt       DateTime           @default(now()) @map("created_at") @db.Timestamp(6)
+
+  application FinancingApplication @relation(fields: [applicationId], references: [id])
+  changedBy   User?                @relation("StatusChangedBy", fields: [changedByUserId], references: [id])
+
+  @@index([applicationId, changedAt], map: "idx_application_status_history_application_changed_at")
+  @@index([changedByUserId], map: "idx_application_status_history_changed_by_user_id")
+  @@map("application_status_history")
+}
+
+model AuditLog {
+  id         String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String?     @map("user_id") @db.Uuid
+  action     AuditAction
+  entityName String      @map("entity_name") @db.VarChar(100)
+  entityId   String?     @map("entity_id") @db.Uuid
+  oldValues  Json?       @map("old_values")
+  newValues  Json?       @map("new_values")
+  ipAddress  String?     @map("ip_address") @db.VarChar(45)
+  userAgent  String?     @map("user_agent") @db.Text
+  createdAt  DateTime    @default(now()) @map("created_at") @db.Timestamp(6)
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([entityName, entityId], map: "idx_audit_logs_entity")
+  @@index([userId, createdAt], map: "idx_audit_logs_user_created_at")
+  @@map("audit_logs")
+}
