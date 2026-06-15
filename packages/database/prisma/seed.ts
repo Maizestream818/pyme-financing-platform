@@ -2,7 +2,8 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-const DEMO_PASSWORD_HASH = '$2b$10$replaceWithAuthPhaseHashForPassword123';
+const DEMO_PASSWORD_HASH =
+  '$2b$12$Hr8YEosb0lq41ldSRnSciOWypOjkmqcTxVejmroGJCHjx/PN1h1AK';
 
 async function seedRoles() {
   const internalOperator = await prisma.role.upsert({

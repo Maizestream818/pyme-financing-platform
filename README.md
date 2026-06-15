@@ -61,7 +61,7 @@ AGENTS.md
 
 ## Ejecucion Local
 
-La Fase 0 deja configurada la base del monorepo y la infraestructura local. Todavia no existe aplicacion Next.js ni NestJS implementada; eso corresponde a fases posteriores.
+La Fase 0 deja configurada la base del monorepo y la infraestructura local. La Fase 2 ya incluye scaffold NestJS para autenticacion, roles, guards y pruebas API. El frontend Next.js sigue como placeholder hasta Fase 8.
 
 Puertos oficiales:
 
@@ -77,7 +77,7 @@ docker compose config
 docker compose up
 ```
 
-`docker compose up` levanta PostgreSQL, pgAdmin y contenedores placeholder para `api` y `web`. Los contenedores `api` y `web` quedan preparados con puertos oficiales, pero no ejecutan logica de aplicacion hasta que las fases correspondientes creen los scaffolds reales e instalen dependencias.
+`docker compose up` levanta PostgreSQL, pgAdmin y contenedores base para `api` y `web`. El backend ejecuta la logica implementada por fases; el frontend queda como placeholder hasta Fase 8.
 
 No ejecutar migraciones en Fase 0. No instalar dependencias sin autorizacion.
 
@@ -94,7 +94,33 @@ pnpm --filter @pyme/database db:migrate
 pnpm --filter @pyme/database db:seed
 ```
 
-La migracion inicial debe crear enums, tablas, relaciones, indices, checks y el indice parcial `unique_published_decision_per_application`. Los seeders iniciales deben cargar roles, usuarios demo, requisitos documentales, productos financieros y reglas iniciales.
+La migracion inicial crea enums, tablas, relaciones, indices, checks y el indice parcial `unique_published_decision_per_application`. Los seeders iniciales cargan roles, usuarios demo, requisitos documentales, productos financieros y reglas iniciales.
+
+## Auth y API
+
+Comandos reales del backend:
+
+```bash
+pnpm --filter @pyme/api typecheck
+pnpm --filter @pyme/api build
+pnpm --filter @pyme/api test:e2e
+pnpm --filter @pyme/api start:dev
+```
+
+Endpoints implementados en Fase 2:
+
+- `POST /api/auth/register`: registro publico applicant con rol automatico `applicant`.
+- `POST /api/auth/login`: login con error generico para credenciales invalidas.
+- `GET /api/auth/me`: usuario actual con JWT.
+- `POST /api/users`: creacion interna de usuarios applicant por `internal_operator`.
+- `GET /api/roles`: lectura de roles por `internal_operator`.
+
+Usuarios demo del seed:
+
+- `operador@demo.com` / `Password123!`
+- `applicant@demo.com` / `Password123!`
+
+Las respuestas deben mantener formato `data/meta/error`. No exponer `passwordHash`, secretos ni tokens en auditoria.
 
 ## Roles
 
@@ -121,7 +147,7 @@ El MVP no debe incluir IA generativa, chatbot, buro real, firma electronica, pag
 
 ## Estado Actual
 
-Fase 1 completada a nivel de archivos: schema Prisma, migracion inicial y seeders creados. La ejecucion de `prisma validate`, migracion y seed queda pendiente de instalar dependencias autorizadas y levantar PostgreSQL.
+Fase 2 completada: auth base, roles, JWT, guards, registro applicant, login, usuario actual, creacion interna de applicants, lectura de roles y pruebas e2e de auth implementadas. El proyecto queda preparado para Fase 3.
 
 ## Decisiones Operativas Cerradas
 
