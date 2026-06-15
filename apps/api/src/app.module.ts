@@ -1,7 +1,9 @@
 import { Module, ValidationError, ValidationPipe } from '@nestjs/common';
 import { APP_FILTER, APP_PIPE } from '@nestjs/core';
+import { ApplicationDocumentsModule } from './modules/application-documents/application-documents.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CompaniesModule } from './modules/companies/companies.module';
+import { DocumentRequirementsModule } from './modules/document-requirements/document-requirements.module';
 import { FinancingApplicationsModule } from './modules/financing-applications/financing-applications.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { StatusHistoryModule } from './modules/status-history/status-history.module';
@@ -43,6 +45,8 @@ function flattenValidationErrors(errors: ValidationError[]) {
     CompaniesModule,
     FinancingApplicationsModule,
     StatusHistoryModule,
+    DocumentRequirementsModule,
+    ApplicationDocumentsModule,
   ],
   providers: [
     {

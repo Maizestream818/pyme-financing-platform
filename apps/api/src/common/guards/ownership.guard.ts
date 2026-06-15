@@ -4,7 +4,7 @@ import { AuthenticatedUser } from '../decorators/current-user.decorator';
 import { ApiException } from '../filters/api.exception';
 import { PrismaService } from '../prisma/prisma.service';
 
-type OwnershipResource = 'company' | 'application';
+type OwnershipResource = 'company' | 'application' | 'applicationDocument';
 
 type OwnershipConfig = {
   resource: OwnershipResource;
@@ -61,10 +61,11 @@ export class OwnershipGuard implements CanActivate {
       );
     }
 
-    const isOwner =
-      config.resource === 'company'
-        ? await this.userOwnsCompany(user.id, resourceId)
-        : await this.userOwnsApplication(user.id, resourceId);
+    const isOwner = await this.userOwnsResource(
+      user.id,
+      config.resource,
+      resourceId,
+    );
 
     if (!isOwner) {
       throw new ApiException(
@@ -101,5 +102,37 @@ export class OwnershipGuard implements CanActivate {
     });
 
     return Boolean(application);
+  }
+
+  private async userOwnsApplicationDocument(userId: string, documentId: string) {
+    const document = await this.prisma.applicationDocument.findFirst({
+      where: {
+        id: documentId,
+        application: {
+          company: {
+            applicantUserId: userId,
+          },
+        },
+      },
+      select: { id: true },
+    });
+
+    return Boolean(document);
+  }
+
+  private async userOwnsResource(
+    userId: string,
+    resource: OwnershipResource,
+    resourceId: string,
+  ) {
+    if (resource === 'company') {
+      return this.userOwnsCompany(userId, resourceId);
+    }
+
+    if (resource === 'application') {
+      return this.userOwnsApplication(userId, resourceId);
+    }
+
+    return this.userOwnsApplicationDocument(userId, resourceId);
   }
 }
