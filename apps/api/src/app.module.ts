@@ -1,7 +1,10 @@
 import { Module, ValidationError, ValidationPipe } from '@nestjs/common';
 import { APP_FILTER, APP_PIPE } from '@nestjs/core';
 import { AuthModule } from './modules/auth/auth.module';
+import { CompaniesModule } from './modules/companies/companies.module';
+import { FinancingApplicationsModule } from './modules/financing-applications/financing-applications.module';
 import { RolesModule } from './modules/roles/roles.module';
+import { StatusHistoryModule } from './modules/status-history/status-history.module';
 import { UsersModule } from './modules/users/users.module';
 import { ApiException } from './common/filters/api.exception';
 import { ApiExceptionFilter } from './common/filters/api-exception.filter';
@@ -32,7 +35,15 @@ function flattenValidationErrors(errors: ValidationError[]) {
 }
 
 @Module({
-  imports: [PrismaModule, AuthModule, UsersModule, RolesModule],
+  imports: [
+    PrismaModule,
+    AuthModule,
+    UsersModule,
+    RolesModule,
+    CompaniesModule,
+    FinancingApplicationsModule,
+    StatusHistoryModule,
+  ],
   providers: [
     {
       provide: APP_FILTER,
