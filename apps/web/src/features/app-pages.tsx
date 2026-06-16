@@ -29,6 +29,7 @@ import type {
   ApplicationDocument,
   ApplicationMatch,
   ApplicationStatus,
+  AuditLog,
   Company,
   FinancialProduct,
   InternalFile,
@@ -2695,5 +2696,92 @@ export function FinancialProductsPage() {
         );
       }}
     </AuthedPage>
+  );
+}
+
+export function AuditLogsPage() {
+  return (
+    <AuthedPage roles={['internal_operator']}>
+      {() => <AuditLogsContent />}
+    </AuthedPage>
+  );
+}
+
+function AuditLogsContent() {
+  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [error, setError] = useState<unknown>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api
+      .get<AuditLog[]>('/audit-logs')
+      .then(setLogs)
+      .catch(setError)
+      .finally(() => setLoading(false));
+  }, []);
+
+  return (
+    <>
+      <PageHeading
+        title="Auditoria"
+        description="Ultimas acciones sensibles registradas para revision interna."
+      />
+      <ErrorBox error={error} />
+      <Section title="Eventos recientes">
+        {loading ? (
+          <EmptyState>Cargando auditoria...</EmptyState>
+        ) : logs.length === 0 ? (
+          <EmptyState>No hay eventos de auditoria.</EmptyState>
+        ) : (
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Accion</th>
+                  <th>Entidad</th>
+                  <th>Usuario</th>
+                  <th>Valores</th>
+                </tr>
+              </thead>
+              <tbody>
+                {logs.map((log) => (
+                  <tr key={log.id}>
+                    <td>{formatDate(log.createdAt)}</td>
+                    <td>{log.action}</td>
+                    <td>
+                      <strong>{log.entityName}</strong>
+                      <br />
+                      <span className="muted">{log.entityId ?? '-'}</span>
+                    </td>
+                    <td>
+                      {log.user ? (
+                        <>
+                          <strong>{log.user.fullName}</strong>
+                          <br />
+                          <span className="muted">
+                            {log.user.email} / {log.user.role}
+                          </span>
+                        </>
+                      ) : (
+                        '-'
+                      )}
+                    </td>
+                    <td>
+                      <pre className="json-block">
+                        {jsonBlock({
+                          oldValues: log.oldValues,
+                          newValues: log.newValues,
+                        })}
+                      </pre>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Section>
+    </>
   );
 }

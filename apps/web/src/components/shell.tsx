@@ -16,6 +16,7 @@ const operatorLinks = [
   { href: '/companies', label: 'Empresas' },
   { href: '/applications', label: 'Solicitudes' },
   { href: '/financial-products', label: 'Productos y reglas' },
+  { href: '/audit-logs', label: 'Auditoria' },
 ];
 
 export function Shell({

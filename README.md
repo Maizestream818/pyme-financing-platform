@@ -1,169 +1,267 @@
 # PyME Financing Platform
 
-PyME Financing Platform es una plataforma web para pre-evaluacion de financiamiento PyME. El sistema debe registrar empresas, capturar solicitudes, gestionar documentos, calcular riesgo inicial, generar matching financiero con productos simulados y permitir que un operador interno publique una decision final al solicitante.
+MVP web para pre-evaluacion de financiamiento PyME. El sistema registra
+empresas, solicitudes, documentos, analisis de riesgo, matching financiero
+simulado y decision final publicada por un operador interno.
 
-El proyecto resuelve la falta de un flujo trazable para ordenar datos financieros, documentos, riesgo y opciones de financiamiento antes de una revision humana. No aprueba creditos reales, no sustituye politicas formales de credito y no se conecta a instituciones financieras externas en el MVP.
+El MVP no aprueba creditos reales, no sustituye politicas formales de credito y
+no se conecta a instituciones financieras externas.
 
-## Alcance del MVP
+## Estado
 
-El MVP debe cubrir:
+Fase 9 cerrada: auditoria, pruebas y cierre del MVP.
 
-- Autenticacion con roles `internal_operator` y `applicant`.
-- Registro publico de `applicant` con `fullName`, `email` y `password`.
-- Registro y edicion controlada de empresas PyME.
-- Captura de solicitudes de financiamiento con monto, plazo, uso, urgencia, necesidad, deuda, garantia e historial crediticio simplificado.
-- Checklist documental, carga local de archivos, metadatos, revision y reemplazo de documentos rechazados en el mismo registro.
-- Analisis de riesgo con indicadores financieros, `risk_score`, `risk_level`, razones e `input_snapshot`.
-- Matching financiero ligado a `risk_assessment_id`.
-- Validacion de necesidad con `validated_need_type`; si existe, el matching debe usar ese valor, si no existe debe usar `need_type`.
-- Decision final en `application_decisions`, creada y publicada por `internal_operator`.
-- Vista limitada para `applicant` con sus datos propios, documentos, estado y decision final publicada.
-- Auditoria solo de acciones sensibles.
+Incluye:
 
-## Stack Definido
+- Backend NestJS + TypeScript en `apps/api`.
+- Frontend Next.js + TypeScript en `apps/web`.
+- Prisma + PostgreSQL en `packages/database`.
+- JWT con roles `internal_operator` y `applicant`.
+- Storage local en `uploads/applications/{application_id}/`.
+- API con formato oficial `data/meta/error`.
+- Pruebas API e2e con Jest + Supertest.
 
-- Frontend: Next.js + TypeScript.
-- Backend: NestJS + TypeScript.
-- Base de datos: PostgreSQL.
-- ORM: Prisma.
-- Infraestructura local: Docker Compose.
-- Autenticacion: JWT + roles.
-- Documentacion API: Swagger / OpenAPI.
-- Storage de documentos: carpeta local `uploads/`.
-
-## Estructura Esperada
-
-```txt
-apps/
-  web/
-    package.json
-    src/
-  api/
-    package.json
-    src/
-packages/
-  database/
-    package.json
-    prisma/
-uploads/
-  applications/
-docs/
-Documentacion/
-docker-compose.yml
-.env.example
-pnpm-workspace.yaml
-package.json
-README.md
-AGENTS.md
-```
-
-`Documentacion/` conserva los PDFs originales. `docs/` contiene guias Markdown derivadas de esos PDFs para desarrollo con Codex y agentes.
-
-## Ejecucion Local
-
-La Fase 0 deja configurada la base del monorepo y la infraestructura local. La Fase 2 ya incluye scaffold NestJS para autenticacion, roles, guards y pruebas API. El frontend Next.js sigue como placeholder hasta Fase 8.
-
-Puertos oficiales:
+## Puertos
 
 - Frontend: `http://localhost:3000`.
 - Backend API: `http://localhost:3001/api`.
 - PostgreSQL: `localhost:5432`.
 - pgAdmin: `http://localhost:5050`.
 
-Comandos de verificacion de Fase 0:
+## Requisitos
+
+- Node.js 20 o superior.
+- Corepack habilitado.
+- Docker Desktop o Docker Compose.
 
 ```bash
-docker compose config
-docker compose up
+corepack enable
+corepack pnpm install
 ```
 
-`docker compose up` levanta PostgreSQL, pgAdmin y contenedores base para `api` y `web`. El backend ejecuta la logica implementada por fases; el frontend queda como placeholder hasta Fase 8.
+## Variables de Entorno
 
-No ejecutar migraciones en Fase 0. No instalar dependencias sin autorizacion.
+Copiar `.env.example` a `.env` para ejecucion local.
 
-## Base de Datos y Prisma
+Windows PowerShell:
 
-La configuracion de Prisma vive en `packages/database`.
+```powershell
+Copy-Item .env.example .env
+```
 
-Comandos previstos para Fase 1 y posteriores:
+Variables principales:
+
+- `DATABASE_URL`
+- `TEST_DATABASE_URL`
+- `JWT_SECRET`
+- `JWT_EXPIRES_IN`
+- `NEXT_PUBLIC_API_BASE_URL`
+- `UPLOADS_DIR`
+- `MAX_UPLOAD_SIZE_MB`
+
+No versionar `.env`. Solo `.env.example` debe permanecer en Git.
+
+## Base de Datos
+
+Levantar PostgreSQL y pgAdmin:
 
 ```bash
-pnpm --filter @pyme/database prisma:validate
-pnpm --filter @pyme/database db:generate
-pnpm --filter @pyme/database db:migrate
-pnpm --filter @pyme/database db:seed
+docker compose up -d postgres pgadmin
 ```
 
-La migracion inicial crea enums, tablas, relaciones, indices, checks y el indice parcial `unique_published_decision_per_application`. Los seeders iniciales cargan roles, usuarios demo, requisitos documentales, productos financieros y reglas iniciales.
-
-## Auth y API
-
-Comandos reales del backend:
+Validar Prisma:
 
 ```bash
-pnpm --filter @pyme/api typecheck
-pnpm --filter @pyme/api build
-pnpm --filter @pyme/api test:e2e
-pnpm --filter @pyme/api start:dev
+corepack pnpm --filter @pyme/database prisma:validate
 ```
 
-Endpoints implementados en Fase 2:
+Si no hay `.env` cargado, exportar `DATABASE_URL` antes de validar.
 
-- `POST /api/auth/register`: registro publico applicant con rol automatico `applicant`.
-- `POST /api/auth/login`: login con error generico para credenciales invalidas.
-- `GET /api/auth/me`: usuario actual con JWT.
-- `POST /api/users`: creacion interna de usuarios applicant por `internal_operator`.
-- `GET /api/roles`: lectura de roles por `internal_operator`.
+Windows PowerShell:
 
-Usuarios demo del seed:
+```powershell
+$env:DATABASE_URL="postgresql://pyme:pyme_local_password@localhost:5432/pyme_financing?schema=public"
+corepack pnpm --filter @pyme/database prisma:validate
+```
 
-- `operador@demo.com` / `Password123!`
-- `applicant@demo.com` / `Password123!`
+Generar cliente, migrar y cargar seed:
 
-Las respuestas deben mantener formato `data/meta/error`. No exponer `passwordHash`, secretos ni tokens en auditoria.
+```bash
+corepack pnpm --filter @pyme/database db:generate
+corepack pnpm --filter @pyme/database db:migrate
+corepack pnpm --filter @pyme/database db:seed
+```
 
-## Roles
+Para pruebas e2e se usa `TEST_DATABASE_URL`. La base de prueba debe existir y
+tener migraciones aplicadas.
 
-- `internal_operator`: debe operar todos los casos, revisar documentos, ejecutar riesgo, generar matching, ver porcentajes, razones, auditoria, expediente completo y publicar decisiones finales.
-- `applicant`: debe registrar su cuenta, crear o editar sus empresas, crear solicitudes, cargar o reemplazar documentos propios y consultar solo su informacion propia y la decision publicada.
+## Ejecucion Local
 
-## Flujo General
+En Windows PowerShell, el comando recomendado para levantar el entorno completo
+es:
 
-1. El applicant se registra o el operador trabaja un caso interno.
-2. Se registra la empresa.
-3. Se crea la solicitud.
-4. Se inicializa el checklist documental.
-5. El applicant u operador carga documentos.
-6. El operador revisa documentos.
-7. El operador valida o corrige la necesidad con `validated_need_type`.
-8. El operador ejecuta analisis de riesgo.
-9. El operador genera matching financiero.
-10. El operador crea y publica una `application_decision`.
-11. El applicant ve solo la decision final publicada.
+```powershell
+corepack pnpm dev:local
+```
 
-## Fuera del MVP
+Este comando crea `.env` desde `.env.example` si hace falta, carga variables de
+entorno, levanta PostgreSQL y pgAdmin, instala dependencias, genera Prisma,
+aplica migraciones, carga seed y abre ventanas separadas para API y Web.
 
-El MVP no debe incluir IA generativa, chatbot, buro real, firma electronica, pagos, microservicios, almacenamiento cloud obligatorio, notificaciones por correo/SMS ni integraciones externas con instituciones financieras.
+Modo manual:
 
-## Estado Actual
+Terminal 1:
 
-Fase 2 completada: auth base, roles, JWT, guards, registro applicant, login, usuario actual, creacion interna de applicants, lectura de roles y pruebas e2e de auth implementadas. El proyecto queda preparado para Fase 3.
+```bash
+corepack pnpm --filter @pyme/api start:dev
+```
 
-## Decisiones Operativas Cerradas
+Terminal 2:
 
-- La API debe responder con formato `data/meta/error`. No usar `success: true` ni `success: false`.
-- Las rutas oficiales de documentos son las definidas en `docs/api.md`.
-- Las rutas oficiales de riesgo son las definidas en `docs/api.md`.
-- El plan oficial usa Fase 0 a Fase 9. No crear Fase 10.
-- El modulo backend debe llamarse `financing-applications`; las rutas publicas deben usar `/applications`.
-- `application_decisions` conserva historial y solo una decision puede estar publicada vigente por solicitud.
-- Al publicar una nueva decision, el backend debe despublicar automaticamente la decision vigente anterior dentro de la misma transaccion.
-- `decision_published` es estado intermedio obligatorio: `matched -> decision_published -> closed`.
-- Una solicitud `closed` no se reabre en el MVP; se debe crear una nueva solicitud para un nuevo proceso.
-- El dashboard applicant sin decision publicada debe mostrar estado, documentos, motivos de rechazo y mensaje de solicitud en revision, sin informacion interna.
-- Despues de `ready_for_analysis`, applicant no puede editar datos criticos de empresa, solicitud ni datos financieros; solo puede reemplazar documentos rechazados cuando el flujo lo permita.
-- Applicant ve solo eventos publicables de `status-history`; `internal_operator` ve historial completo.
-- `internal_operator` puede crear usuarios applicant desde flujo interno; applicant nunca elige rol.
-- Matching descarta productos que incumplen requisitos obligatorios y penaliza productos viables con peor ajuste a `validated_need_type`.
-- Producto activo que participa en matching debe tener `estimated_annual_rate`; si falta, bloquear activacion o excluirlo del matching con error interno controlado.
-- Pruebas automatizadas API: Jest + Supertest. Postman solo puede apoyar pruebas manuales.
+```bash
+corepack pnpm --filter @pyme/web dev
+```
+
+Abrir `http://localhost:3000`.
+
+## Usuarios Demo
+
+Seed:
+
+- Operador: `operador@demo.com` / `Password123!`
+- Applicant: `applicant@demo.com` / `Password123!`
+
+El registro publico siempre crea usuarios con rol `applicant`; el applicant no
+puede elegir rol.
+
+## Comandos de Verificacion
+
+```bash
+corepack pnpm --filter @pyme/database prisma:validate
+corepack pnpm --filter @pyme/api typecheck
+corepack pnpm --filter @pyme/api build
+corepack pnpm --filter @pyme/api test
+corepack pnpm --filter @pyme/api test:e2e
+corepack pnpm --filter @pyme/web typecheck
+corepack pnpm --filter @pyme/web build
+corepack pnpm -r typecheck
+```
+
+`@pyme/api test` y `@pyme/api test:e2e` ejecutan suites Jest + Supertest.
+
+## Flujo Applicant
+
+1. Registrarse en `/register`.
+2. Iniciar sesion en `/login`.
+3. Crear empresa en `/companies`.
+4. Crear solicitud en `/applications`.
+5. Entrar a documentos de la solicitud.
+6. Inicializar checklist si no existe.
+7. Subir documentos o reemplazar rechazados.
+8. Consultar estado e historial visible.
+9. Consultar decision publica en `/applications/:id/public-decision`.
+
+Applicant solo ve sus empresas, solicitudes, documentos, estado y decision
+publicada. No ve riesgo, matching, expediente interno, reglas, pesos, DSCR,
+notas internas ni auditoria.
+
+## Flujo Internal Operator
+
+1. Iniciar sesion en `/login`.
+2. Ver empresas y solicitudes.
+3. Inicializar y revisar documentos.
+4. Validar `validated_need_type`.
+5. Cambiar estado a `ready_for_analysis` cuando aplique.
+6. Calcular riesgo.
+7. Generar matching.
+8. Ver expediente interno.
+9. Crear decision oficial.
+10. Publicar decision.
+11. Cerrar solicitud.
+12. Revisar auditoria en `/audit-logs`.
+
+El operador puede ver todos los casos y la informacion interna completa.
+
+## API Principal
+
+Todas las rutas protegidas usan JWT. La API responde con `data/meta/error`; no
+usar ni consumir `success: true` o `success: false`.
+
+Rutas principales:
+
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `GET /api/auth/me`
+- `GET|POST /api/companies`
+- `GET|PATCH /api/companies/:id`
+- `GET /api/companies/:id/applications`
+- `GET|POST /api/applications`
+- `GET|PATCH /api/applications/:id`
+- `PATCH /api/applications/:id/financial-info`
+- `PATCH /api/applications/:id/status`
+- `PATCH /api/applications/:id/validated-need-type`
+- `GET /api/applications/:id/status-history`
+- `POST /api/applications/:id/documents/initialize`
+- `GET /api/applications/:id/documents`
+- `POST /api/application-documents/:id/upload`
+- `PATCH /api/application-documents/:id/review`
+- `GET /api/application-documents/:id/download`
+- `GET|POST|PATCH /api/financial-products`
+- `GET /api/financial-products/:id/rules`
+- `POST|PATCH /api/product-rules`
+- `POST /api/applications/:id/risk-assessments`
+- `GET /api/applications/:id/risk-assessments`
+- `GET /api/risk-assessments/:id`
+- `GET|POST /api/risk-assessments/:id/matches`
+- `GET /api/applications/:id/internal-file`
+- `POST /api/applications/:id/decisions`
+- `GET /api/applications/:id/decisions`
+- `PATCH /api/application-decisions/:id`
+- `PATCH /api/application-decisions/:id/publish`
+- `GET /api/applications/:id/public-decision`
+- `PATCH /api/applications/:id/close`
+- `GET /api/audit-logs`
+
+## Auditoria
+
+Se auditan acciones sensibles:
+
+- `register_applicant`
+- `login`
+- `validate_need_type`
+- `upload_document`
+- `replace_document`
+- `review_document`
+- `calculate_risk`
+- `generate_matches`
+- `create`
+- `update`
+- `publish_decision`
+- `status_change`
+
+Se mantienen los nombres `create`, `status_change` y `publish_decision` usados
+por decisiones/cierre porque existen en el enum oficial `audit_action` y ya son
+consistentes con las pruebas. `create` se usa para crear decision;
+`publish_decision` para publicar decision; `status_change` para cierre o cambios
+de estado auditados.
+
+La auditoria no debe guardar `password_hash`, tokens ni contenido documental.
+
+## Reglas de Seguridad Relevantes
+
+- Backend es autoridad de permisos y ownership.
+- Applicant se autoriza por `companies.applicant_user_id`.
+- No usar `created_by_user_id` como ownership.
+- Descargas pasan por backend.
+- `uploads/` no es carpeta publica.
+- `application_matches` son internos.
+- `application_decisions` es la decision oficial publicada.
+- Solo puede existir una decision publicada vigente por solicitud.
+- Al publicar una nueva decision se despublica la anterior en la misma transaccion.
+- Solicitudes `closed` no se reabren en el MVP.
+
+## Pendientes
+
+No hay pendientes funcionales bloqueantes para demo tecnica local. Como mejora
+posterior puede agregarse mayor cobertura unitaria por servicio, manteniendo las
+suites e2e actuales como prueba principal del MVP.

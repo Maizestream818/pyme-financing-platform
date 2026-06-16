@@ -258,3 +258,22 @@ export type InternalFile = {
   statusHistory: StatusHistoryItem[];
   decisions: ApplicationDecision[];
 };
+
+export type AuditLog = {
+  id: string;
+  userId?: string | null;
+  user?: {
+    id: string;
+    fullName: string;
+    email: string;
+    role: Role;
+  } | null;
+  action: string;
+  entityName: string;
+  entityId?: string | null;
+  oldValues?: unknown;
+  newValues?: unknown;
+  ipAddress?: string | null;
+  userAgent?: string | null;
+  createdAt: string;
+};
